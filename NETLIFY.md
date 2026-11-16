@@ -28,6 +28,10 @@ Optional:
 - `MAIL_TO_BLAKEZUNIGA` — inbox for the blakezuniga.com contact form at `POST /api/bz-contact`. If unset, mail goes to `bpz82bear@gmail.com` (the blake@blakezuniga.com mailbox is still being set up). Set this to `blake@blakezuniga.com` once that mailbox is ready. The function is called from blakezuniga.com / www and the surge preview; CORS allows only `https://blakezuniga.com`, `https://www.blakezuniga.com`, and `https://bpz-guitar-versions.surge.sh`.
 - `BUTTONDOWN_API_KEY` or `MAILCHIMP_API_KEY` + `MAILCHIMP_LIST_ID` — to save newsletter signups to a list (otherwise a signup still emails `MAIL_TO` when Resend is configured)
 
+## CORS for form functions
+
+`/api/contact`, `/api/order`, and `/api/subscribe` answer OPTIONS preflight and echo `Access-Control-Allow-Origin` only for `https://thecurltapes.com`, `https://www.thecurltapes.com`, and `https://bpz82.github.io`. Same-origin requests (no `Origin`, or the Netlify site itself) still work and do not get that header. `/api/bz-contact` keeps its own allow-list (`blakezuniga.com`, `www`, and the surge preview).
+
 Verify `thecurltapes.com` in Resend and add the DNS records Resend shows before relying on `MAIL_FROM`.
 
 ## Rollback

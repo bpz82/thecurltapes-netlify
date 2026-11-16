@@ -165,5 +165,59 @@ console.log('--- handleBzContact CORS ---');
     `status=${wrapOpt.status} allow=${wrapOpt.headers.get('Access-Control-Allow-Origin')}`);
 }
 
+console.log('--- site form CORS (contact, order, subscribe) ---');
+async function siteRequest(handler, { method, body, origin }) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (origin) headers.Origin = origin;
+  const init = { method, headers };
+  if (method === 'POST') init.body = JSON.stringify(body || {});
+  const req = new Request('https://example.com/api', init);
+  const res = await handler(req);
+  let json;
+  try { json = await res.json(); } catch { json = null; }
+  return { status: res.status, json, headers: res.headers };
+}
+
+const siteOrigins = [
+  'https://thecurltapes.com',
+  'https://www.thecurltapes.com',
+  'https://bpz82.github.io',
+];
+const siteBadOrigin = 'https://evil.example';
+const wrappers = [
+  ['contact.mjs', contactFn, contactBody, { email: 'not-an-email' }],
+  ['order.mjs', orderFn, orderBody, { items: [] }],
+  ['subscribe.mjs', subscribeFn, subscribeBody, { email: 'not-an-email' }],
+];
+
+for (const [name, fn, validBody, invalidBody] of wrappers) {
+  for (const origin of siteOrigins) {
+    const opt = await siteRequest(fn, { method: 'OPTIONS', origin });
+    await expectCheck(`${name} OPTIONS ${origin}`,
+      opt.status === 204 && corsOk(opt, origin) === true,
+      `status=${opt.status} allow=${opt.headers.get('Access-Control-Allow-Origin')}`);
+  }
+  const optBad = await siteRequest(fn, { method: 'OPTIONS', origin: siteBadOrigin });
+  await expectCheck(`${name} OPTIONS disallowed origin`,
+    optBad.status === 403 && !optBad.headers.get('Access-Control-Allow-Origin'),
+    `status=${optBad.status} allow=${optBad.headers.get('Access-Control-Allow-Origin')}`);
+  const postOkOrigin = await siteRequest(fn, { method: 'POST', body: validBody, origin: siteOrigins[0] });
+  await expectCheck(`${name} POST allowed origin no env has CORS and 503`,
+    postOkOrigin.status === 503 && postOkOrigin.json && postOkOrigin.json.ok === false && corsOk(postOkOrigin, siteOrigins[0]) === true,
+    `status=${postOkOrigin.status} body=${JSON.stringify(postOkOrigin.json)} allow=${postOkOrigin.headers.get('Access-Control-Allow-Origin')}`);
+  const postInvalid = await siteRequest(fn, { method: 'POST', body: invalidBody, origin: siteOrigins[0] });
+  await expectCheck(`${name} POST invalid body allowed origin has CORS and 400`,
+    postInvalid.status === 400 && postInvalid.json && postInvalid.json.ok === false && corsOk(postInvalid, siteOrigins[0]) === true,
+    `status=${postInvalid.status} body=${JSON.stringify(postInvalid.json)} allow=${postInvalid.headers.get('Access-Control-Allow-Origin')}`);
+  const postNoOrigin = await siteRequest(fn, { method: 'POST', body: validBody });
+  await expectCheck(`${name} POST no Origin still 503 and no CORS header`,
+    postNoOrigin.status === 503 && postNoOrigin.json && postNoOrigin.json.ok === false && !postNoOrigin.headers.get('Access-Control-Allow-Origin'),
+    `status=${postNoOrigin.status} body=${JSON.stringify(postNoOrigin.json)} allow=${postNoOrigin.headers.get('Access-Control-Allow-Origin')}`);
+  const postNetlify = await siteRequest(fn, { method: 'POST', body: validBody, origin: 'https://thecurltapes.netlify.app' });
+  await expectCheck(`${name} POST netlify.app origin still 503 and no CORS header`,
+    postNetlify.status === 503 && postNetlify.json && postNetlify.json.ok === false && !postNetlify.headers.get('Access-Control-Allow-Origin'),
+    `status=${postNetlify.status} body=${JSON.stringify(postNetlify.json)} allow=${postNetlify.headers.get('Access-Control-Allow-Origin')}`);
+}
+
 console.log(`--- ${passed} passed, ${failed} failed ---`);
 process.exit(failed ? 1 : 0);
