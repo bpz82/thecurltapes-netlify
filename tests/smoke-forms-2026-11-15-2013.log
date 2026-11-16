@@ -1,0 +1,19 @@
+Curl Tapes form smoke test
+Run at: 2026-11-15 20:13:31 EST
+Working directory: /workspace/thecurltapes-netlify
+
+--- no env vars: expect 503 ---
+PASS  handleContact no env  status=503  body={"ok":false,"error":"Email delivery is not configured."}
+PASS  handleSubscribe no env  status=503  body={"ok":false,"error":"Signup storage is not configured."}
+PASS  handleOrder no env  status=503  body={"ok":false,"error":"Order requests are not configured."}
+--- honeypot (website field): expect fake success 200 ok:true ---
+PASS  handleContact honeypot  status=200  body={"ok":true}
+PASS  handleSubscribe honeypot  status=200  body={"ok":true}
+INFO  handleOrder honeypot (no honeypot in this handler)  status=503 body={"ok":false,"error":"Order requests are not configured."}
+--- Netlify function wrappers use process.env (unset): expect 503 ---
+PASS  contact.mjs no env  status=503  body={"ok":false,"error":"Email delivery is not configured."}
+PASS  subscribe.mjs no env  status=503  body={"ok":false,"error":"Signup storage is not configured."}
+PASS  order.mjs no env  status=503  body={"ok":false,"error":"Order requests are not configured."}
+PASS  contact.mjs honeypot  status=200  body={"ok":true}
+PASS  subscribe.mjs honeypot  status=200  body={"ok":true}
+--- 10 passed, 0 failed ---

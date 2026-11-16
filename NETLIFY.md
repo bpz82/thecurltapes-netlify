@@ -25,6 +25,7 @@ Required for contact and order emails:
 Optional:
 
 - `MAIL_TO_COLEMAN` / `MAIL_TO_BLAKE` — if the "Message Coleman" and "Message Blake" forms should go to different inboxes (otherwise they use `MAIL_TO`)
+- `MAIL_TO_BLAKEZUNIGA` — inbox for the blakezuniga.com contact form at `POST /api/bz-contact`. If unset, mail goes to `bpz82bear@gmail.com` (the blake@blakezuniga.com mailbox is still being set up). Set this to `blake@blakezuniga.com` once that mailbox is ready. The function is called from blakezuniga.com / www and the surge preview; CORS allows only `https://blakezuniga.com`, `https://www.blakezuniga.com`, and `https://bpz-guitar-versions.surge.sh`.
 - `BUTTONDOWN_API_KEY` or `MAILCHIMP_API_KEY` + `MAILCHIMP_LIST_ID` — to save newsletter signups to a list (otherwise a signup still emails `MAIL_TO` when Resend is configured)
 
 Verify `thecurltapes.com` in Resend and add the DNS records Resend shows before relying on `MAIL_FROM`.
@@ -38,6 +39,6 @@ To take the custom domain off Netlify and show the GitHub Pages copy again, poin
 What a rollback cannot undo:
 
 - DNS and certificate changes take time and cannot be snapped back instantly.
-- Form emails already sent via Resend stay in the inboxes they were delivered to.
+- Form emails already sent via Resend stay in the inboxes they were delivered to. That includes `/api/bz-contact` messages, which go to `MAIL_TO_BLAKEZUNIGA` or, if that variable is unset, to `bpz82bear@gmail.com`.
 - If Zoho MX, SPF, verification, or DKIM records are dropped during a DNS change, @thecurltapes.com mail can stop until those records are put back.
 - Do not cancel the Squarespace website plan without Blake's OK. That is a billing change.

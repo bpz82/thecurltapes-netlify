@@ -1,5 +1,5 @@
 Curl Tapes form smoke test
-Run at: 2026-11-15 20:13:31 EST
+Run at: 2026-11-15 20:46:44 EST
 Working directory: /workspace/thecurltapes-netlify
 
 --- no env vars: expect 503 ---
@@ -16,4 +16,23 @@ PASS  subscribe.mjs no env  status=503  body={"ok":false,"error":"Signup storage
 PASS  order.mjs no env  status=503  body={"ok":false,"error":"Order requests are not configured."}
 PASS  contact.mjs honeypot  status=200  body={"ok":true}
 PASS  subscribe.mjs honeypot  status=200  body={"ok":true}
---- 10 passed, 0 failed ---
+--- handleBzContact no env vars: expect 503 ---
+PASS  handleBzContact no env  status=503  body={"ok":false,"error":"Email delivery is not configured."}
+PASS  bz-contact.mjs no env  status=503  body={"ok":false,"error":"Email delivery is not configured."}
+--- handleBzContact honeypot: expect fake success 200 ok:true ---
+PASS  handleBzContact honeypot  status=200  body={"ok":true}
+PASS  bz-contact.mjs honeypot  status=200  body={"ok":true}
+--- handleBzContact validation: expect 400 ---
+PASS  handleBzContact missing name  status=400  body={"ok":false,"error":"Name, a valid email, and a message are required."}
+PASS  handleBzContact missing email  status=400  body={"ok":false,"error":"Name, a valid email, and a message are required."}
+PASS  handleBzContact invalid email  status=400  body={"ok":false,"error":"Name, a valid email, and a message are required."}
+PASS  handleBzContact missing message  status=400  body={"ok":false,"error":"Name, a valid email, and a message are required."}
+--- handleBzContact CORS ---
+PASS  handleBzContact OPTIONS allowed origin  status=204 allow=https://blakezuniga.com
+PASS  handleBzContact OPTIONS www origin  status=204 allow=https://www.blakezuniga.com
+PASS  handleBzContact OPTIONS surge origin  status=204 allow=https://bpz-guitar-versions.surge.sh
+PASS  handleBzContact OPTIONS disallowed origin  status=403 allow=null
+PASS  handleBzContact POST disallowed origin  status=403 body={"ok":false,"error":"Forbidden"} allow=null
+PASS  handleBzContact POST allowed origin no env has CORS and 503  status=503 body={"ok":false,"error":"Email delivery is not configured."} allow=https://blakezuniga.com
+PASS  bz-contact.mjs OPTIONS allowed origin  status=204 allow=https://blakezuniga.com
+--- 25 passed, 0 failed ---
